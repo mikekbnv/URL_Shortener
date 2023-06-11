@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <style>
+        .container { 
+            text-align: center;
+        }
+
+        .container form {
+            margin: 18% 0 20px 0;
+        }
+
+        input[type=text] {
+            border: 1px solid black;
+            padding: 10px;
+        }
+
+        button {
+            border: 1px solid black;
+            background-color: #0077B5;
+            color: #FFFFFF;
+            padding: 10px;
+        }
+
+        body * {
+            font-size: 14pt;
+            font-family: Georgia;
+        }
+    </style>
+    <script>
+        function send(e, form) {
+            var surl = document.getElementById("url");
+            var btn = form.elements["btn"];
+
+            btn.disabled = true;
+            surl.innerText = "";
+
+            fetch('/', {
+                method: 'post',
+                body: new URLSearchParams({"url": form.elements["url"].value}),
+            })
+            .then((res) => {
+                return res.text();
+            })
+            .then((text) => {
+                surl.innerText = text;
+            })
+            .finally(() => {
+                btn.disabled = false;
+            });
+
+            e.preventDefault();
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <form method="post" onsubmit="send(event,this)">
+            <input type="text" name="url" placeholder="enter a long URL" size="48"/>
+            <button type="submit" name="btn">Shorten</button>
+        </form>
+        <div class="container">
+            <span id="url"></span>
+        </div>
+    </div>
+</body>
+</html>
