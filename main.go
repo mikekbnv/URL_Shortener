@@ -8,10 +8,8 @@ import (
 	"math/big"
 	"math/rand"
 	"net/http"
-	"os"
 	"strings"
 
-	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -20,8 +18,8 @@ var (
 
 	f   embed.FS
 	rdb = redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("redis:6379"),
-		Password: os.Getenv("DB_PASS"),
+		Addr:     "redis:6379",
+		Password: "",
 		DB:       0,
 	})
 	ctx = context.Background()
@@ -35,6 +33,7 @@ func shorten(url string) string {
 
 	for {
 		k = big.NewInt(int64(10000000 + rand.Intn(1000000))).Text(62)
+
 		exist, err := rdb.Exists(ctx, k).Result()
 		if err != nil {
 			log.Fatal(err)
@@ -91,33 +90,24 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				log.Printf("ERROR: %s not found", k)
 				http.Error(w, "Not Found", http.StatusNotFound)
+				return
 			}
 		}
-		//if url, ok := urls[k]; ok {
+		
 		log.Printf("INFO: redirecting %s -> %s\n", k, val)
 		http.Redirect(w, r, val, http.StatusPermanentRedirect)
-		return
-		//}
-
-		// log.Printf("ERROR: %s not found", k)
-		// http.Error(w, "Not Found", http.StatusNotFound)
 	}
 }
 
 func main() {
+
 	_, err := rdb.Ping(ctx).Result()
-	fmt.Println("test")
-	if err != nil {
-		log.Fatal(err)
-	}
-	
-	err = godotenv.Load()
+
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/favicon.ico", http.NotFoundHandler())
 	mux.Handle("/", http.HandlerFunc(handler))
-	log.Fatal(http.ListenAndServe(os.Getenv("PORT"), mux))
+	log.Fatal(http.ListenAndServe(":2831", mux))
 }
